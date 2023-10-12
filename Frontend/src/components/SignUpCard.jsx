@@ -53,7 +53,7 @@ export default function SignupCard() {
 			setUser(data);
       
     } catch (error) {
-      console.log(error)
+      showToast("Error", error,  "error");
     }
   }
 
