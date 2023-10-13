@@ -2,11 +2,18 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary"
+import mongoose from "mongoose";
 
 const getUserProfile = async ( req, res ) => {
-    const { username } = req.params;
+    //query is either a username or userId
+    const { query } = req.params;
     try {
-        const user = await User.findOne({ username }).select("-password").select("-updatedAt");
+        let user;
+        if(mongoose.Types.ObjectId.isValid(query)) {
+            user = await User.findOne({ _id: query }).select("-password").select("-updatedAt");
+        } else {
+            user = await User.findOne({ username: query }).select("-password").select("-updatedAt");
+        }
         if(!user) return res.status(400).json({ error: "User not found "});
         res.status(200).json(user);
     } catch (err) {
@@ -143,6 +150,9 @@ const updateUser = async ( req, res ) => {
             }
             const uploadedResponse = await cloudinary.uploader.upload(profilePic);
             profilePic = uploadedResponse.secure_url;
+        } else {
+            // If profilePic is not provided in the request, set it to the existing user's profilePic
+            profilePic = user.profilePic;
         }
 
         user.name = name || user.name;

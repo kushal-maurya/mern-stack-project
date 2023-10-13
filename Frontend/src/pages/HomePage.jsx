@@ -1,14 +1,47 @@
-import { Button, Flex } from "@chakra-ui/react";
-import { Link } from "react-router-dom";
+import {  Flex, Spinner } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import useShowToast from "../hooks/useShowToast";
+import Post from "../components/Post";
 
 function HomePage() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const showToast = useShowToast();
+
+  useEffect(() => {
+    const getFeedPosts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/posts/feeds");
+        const data = await res.json();
+        if (data.error) {
+          showToast("Error", data.error, "error");
+        }
+        setPosts(data);
+        console.log(data);
+      } catch (error) {
+        showToast("Error", error, "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    getFeedPosts();
+  }, [showToast]);
   return (
-    <Link to={"/markzuckerberg"}>
-        <Flex w={"full"} justifyContent={"center"}>
-            <Button mx={"auto"}>Visit Profile Page</Button>
+    <>
+
+    {!loading && posts.length === 0 && <h1>Follow some uer to see the feeds</h1>}
+      {loading && (
+        <Flex justifyContent="center">
+          <Spinner size="xl" />
         </Flex>
-    </Link>
-    )
+      )}
+
+      {posts.map ((post) => [
+        <Post key={post._id} post={post} postedBy={post.postedBy}/>
+      ])}
+    </>
+  );
 }
 
-export default HomePage
+export default HomePage;
