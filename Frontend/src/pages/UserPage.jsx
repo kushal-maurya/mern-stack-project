@@ -5,19 +5,20 @@ import useShowToast from "../hooks/useShowToast";
 import { Flex, Spinner } from "@chakra-ui/react";
 import Post from "../components/Post";
 import useGetUserProfile from "../hooks/useGetUserProfile";
+import { useRecoilState } from "recoil";
+import postsAtom from "../atoms/postAtoms";
 
 function UserPage() {
   const {user, loading} = useGetUserProfile();
   const { username } = useParams();
-  const [ posts, setPosts ] = useState([]);
+  const [ posts, setPosts ] = useRecoilState(postsAtom);
   const [ fetchingPosts, setFetchingPosts ] = useState(true);
 
   const showToast = useShowToast();
 
   useEffect(() => {
-    
-
     const getPosts = async () => {
+      if (!user) return;
       setFetchingPosts(true);
       try {
         const res = await fetch(`api/posts/user/${username}`);
@@ -33,8 +34,9 @@ function UserPage() {
 
     getPosts();
 
-  },[username, showToast])
-
+  },[username, showToast, setPosts, user])
+  console.log("post is here and it is recoil state", posts)
+  
   if(!user && loading) {
     return (
       <Flex justifyContent={"center"}>
